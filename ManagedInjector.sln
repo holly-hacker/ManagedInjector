@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManagedInjectior.Lib", "ManagedInjectior.Lib\ManagedInjectior.Lib.csproj", "{FFAB3771-5AF9-431C-B3B8-39B8C79E791C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManagedInjector.Lib", "ManagedInjector.Lib\ManagedInjector.Lib.csproj", "{FFAB3771-5AF9-431C-B3B8-39B8C79E791C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManagedInjector.CLI", "ManagedInjector.CLI\ManagedInjector.CLI.csproj", "{4F7965E3-6CCE-45BA-9321-E07A0D08EC7F}"
 EndProject

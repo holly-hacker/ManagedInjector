@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>9</LangVersion>
         <Nullable>enable</Nullable>
 
-        <RootNamespace>HoLLy.ManagedInjectior</RootNamespace>
+        <RootNamespace>HoLLy.ManagedInjector</RootNamespace>
 
         <PackageId>HoLLy.ManagedInjector</PackageId>
         <Authors>HoLLy</Authors>
+        <TargetFramework>netstandard2.0</TargetFramework>
     </PropertyGroup>
 
 </Project>
