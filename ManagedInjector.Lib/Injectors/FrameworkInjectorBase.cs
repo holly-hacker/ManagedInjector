@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Iced.Intel;
+using static Iced.Intel.AssemblerRegisters;
 
 namespace HoLLy.ManagedInjector.Injectors
 {
@@ -38,7 +40,7 @@ namespace HoLLy.ManagedInjector.Injectors
 			return mod.BaseAddress + fnAddr;
 		}
 
-		private static InstructionList CreateCallStub(IntPtr hProc, string asmPath, string typeFullName, string methodName, string? args, IntPtr fnAddr, bool x86, string clrVersion)
+		private static IReadOnlyList<Instruction> CreateCallStub(IntPtr hProc, string asmPath, string typeFullName, string methodName, string? args, IntPtr fnAddr, bool x86, string clrVersion)
 		{
 			const string buildFlavor = "wks";    // WorkStation
 
@@ -54,56 +56,56 @@ namespace HoLLy.ManagedInjector.Injectors
             var pwzTypeName = allocString(typeFullName);
             var pwzAssemblyPath = allocString(asmPath);
 
-            var instructions = new InstructionList();
+            var c = new Assembler(x86 ? 32 : 64);
 
-            void AddCallReg(Register r, params object[] callArgs) => CodeInjectionUtils.AddCallStub(instructions, r, callArgs, x86);
-            void AddCallPtr(IntPtr fn, params object[] callArgs) => CodeInjectionUtils.AddCallStub(instructions, fn, callArgs, x86);
+            void AddCallReg(Register r, params object[] callArgs) => CodeInjectionUtils.AddCallStub(c, r, callArgs, x86);
+            void AddCallPtr(IntPtr fn, params object[] callArgs) => CodeInjectionUtils.AddCallStub(c, fn, callArgs, x86);
 
             if (x86) {
                 // call CorBindToRuntimeEx
                 AddCallPtr(fnAddr, pwszVersion, pwszBuildFlavor, (byte)0, rcslid, riid, ppv);
 
                 // call ICLRRuntimeHost::Start
-                instructions.Add(Instruction.Create(Code.Mov_r32_rm32, Register.EDX, new MemoryOperand(Register.None, ppv.ToInt32())));
-                instructions.Add(Instruction.Create(Code.Mov_r32_rm32, Register.EAX, new MemoryOperand(Register.EDX)));
-                instructions.Add(Instruction.Create(Code.Mov_r32_rm32, Register.EAX, new MemoryOperand(Register.EAX, 0x0C)));
-                AddCallReg(Register.EAX, Register.EDX);
+                c.mov(edx, __[ppv.ToInt32()]);
+                c.mov(eax, __[edx]);
+                c.mov(eax, __[eax + 0x0C]);
+                AddCallReg(eax, edx);
 
                 // call ICLRRuntimeHost::ExecuteInDefaultAppDomain
-                instructions.Add(Instruction.Create(Code.Mov_r32_rm32, Register.EDX, new MemoryOperand(Register.None, ppv.ToInt32())));
-                instructions.Add(Instruction.Create(Code.Mov_r32_rm32, Register.EAX, new MemoryOperand(Register.EDX)));
-                instructions.Add(Instruction.Create(Code.Mov_r32_rm32, Register.EAX, new MemoryOperand(Register.EAX, 0x2C)));
-                AddCallReg(Register.EAX, Register.EDX, pwzAssemblyPath, pwzTypeName, pwzMethodName, pwzArgument, pReturnValue);
+                c.mov(edx, __[ppv.ToInt32()]);
+                c.mov(eax, __[edx]);
+                c.mov(eax, __[eax + 0x2C]);
+                AddCallReg(eax, edx, pwzAssemblyPath, pwzTypeName, pwzMethodName, pwzArgument, pReturnValue);
 
-                instructions.Add(Instruction.Create(Code.Retnd));
+                c.ret();
             } else {
                 const int maxStackIndex = 3;
                 const int stackOffset = 0x20;
-                instructions.Add(Instruction.Create(Code.Sub_rm64_imm8, Register.RSP, stackOffset + maxStackIndex * 8));
+                c.sub(rsp, stackOffset + maxStackIndex * 8);
 
                 // call CorBindToRuntimeEx
                 AddCallPtr(fnAddr, pwszVersion, pwszBuildFlavor, 0, rcslid, riid, ppv);
 
                 // call pClrHost->Start();
-                instructions.Add(Instruction.Create(Code.Mov_r64_imm64, Register.RCX, ppv.ToInt64()));
-                instructions.Add(Instruction.Create(Code.Mov_r64_rm64, Register.RCX, new MemoryOperand(Register.RCX)));
-                instructions.Add(Instruction.Create(Code.Mov_r64_rm64, Register.RAX, new MemoryOperand(Register.RCX)));
-                instructions.Add(Instruction.Create(Code.Mov_r64_rm64, Register.RDX, new MemoryOperand(Register.RAX, 0x18)));
-                AddCallReg(Register.RDX, Register.RCX);
+                c.mov(rcx, ppv.ToInt64());
+                c.mov(rcx, __[rcx]);
+                c.mov(rax, __[rcx]);
+                c.mov(rdx, __[rax + 0x18]);
+                AddCallReg(rdx, rcx);
 
                 // call pClrHost->ExecuteInDefaultAppDomain()
-                instructions.Add(Instruction.Create(Code.Mov_r64_imm64, Register.RCX, ppv.ToInt64()));
-                instructions.Add(Instruction.Create(Code.Mov_r64_rm64, Register.RCX, new MemoryOperand(Register.RCX)));
-                instructions.Add(Instruction.Create(Code.Mov_r64_rm64, Register.RAX, new MemoryOperand(Register.RCX)));
-                instructions.Add(Instruction.Create(Code.Mov_r64_rm64, Register.RAX, new MemoryOperand(Register.RAX, 0x58)));
-                AddCallReg(Register.RAX, Register.RCX, pwzAssemblyPath, pwzTypeName, pwzMethodName, pwzArgument, pReturnValue);
+                c.mov(rcx, ppv.ToInt64());
+                c.mov(rcx, __[rcx]);
+                c.mov(rax, __[rcx]);
+                c.mov(rax, __[rax + 0x58]);
+                AddCallReg(rax, rcx, pwzAssemblyPath, pwzTypeName, pwzMethodName, pwzArgument, pReturnValue);
 
-                instructions.Add(Instruction.Create(Code.Add_rm64_imm8, Register.RSP, stackOffset + maxStackIndex * 8));
+                c.add(rsp, stackOffset + maxStackIndex * 8);
 
-                instructions.Add(Instruction.Create(Code.Retnq));
+                c.ret();
             }
 
-            return instructions;
+            return c.Instructions;
 
             IntPtr alloc(int size, int protection = 0x04) => Native.VirtualAllocEx(hProc, IntPtr.Zero, (uint)size, 0x1000, protection);
             void writeBytes(IntPtr address, byte[] b) => Native.WriteProcessMemory(hProc, address, b, (uint)b.Length, out _);

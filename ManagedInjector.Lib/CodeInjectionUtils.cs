@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Iced.Intel;
+using static Iced.Intel.AssemblerRegisters;
 
 namespace HoLLy.ManagedInjector
 {
@@ -74,82 +75,97 @@ namespace HoLLy.ManagedInjector
 			}
 		}
 
-		public static void AddCallStub(InstructionList instructions, IntPtr regAddr, object[] arguments, bool x86, bool cleanStack = false)
+		public static void AddCallStub(Assembler c, IntPtr regAddr, object[] arguments, bool x86, bool cleanStack = false)
 		{
 			if (x86) {
-				instructions.Add(Instruction.Create(Code.Mov_r32_imm32, Register.EAX, regAddr.ToInt32()));
-				AddCallStub(instructions, Register.EAX, arguments, true, cleanStack);
+				c.mov(eax, regAddr.ToInt32());
+				AddCallStub(c, eax, arguments, true, cleanStack);
 			} else {
-				instructions.Add(Instruction.Create(Code.Mov_r64_imm64, Register.RAX, regAddr.ToInt64()));
-				AddCallStub(instructions, Register.RAX, arguments, false, cleanStack);
+				c.mov(rax, regAddr.ToInt64());
+				AddCallStub(c, rax, arguments, false, cleanStack);
 			}
 		}
 
-		public static void AddCallStub(InstructionList instructions, Register regFun, object[] arguments, bool x86, bool cleanStack = false)
-        {
-	        if (x86) {
-		        // push arguments
-		        for (int i = arguments.Length - 1; i >= 0; i--) {
-			        instructions.Add(arguments[i] switch {
-				        IntPtr p => Instruction.Create(Code.Pushd_imm32, p.ToInt32()),
-				        int i32 => Instruction.Create(Code.Pushd_imm32, i32),
-				        byte u8 => Instruction.Create(Code.Pushd_imm8, u8),
-				        Register reg => Instruction.Create(Code.Push_r32, reg),
-				        _ => throw new NotSupportedException($"Unsupported parameter type {arguments[i].GetType()} on x86"),
-			        });
-		        }
+		public static void AddCallStub(Assembler c, Register regFun, object[] arguments, bool x86, bool cleanStack = false)
+		{
+			if (x86) {
+				// push arguments
+				for (int i = arguments.Length - 1; i >= 0; i--)
+				{
+					switch (arguments[i])
+					{
+						case IntPtr p:
+							c.push(p.ToInt32());
+							break;
+						case int i32:
+							c.push(i32);
+							break;
+						case byte u8:
+							c.push(u8);
+							break;
+						case AssemblerRegister32 reg:
+							c.push(reg);
+							break;
+						case AssemblerRegister64 reg:
+							c.push(reg);
+							break;
+						default:
+							throw new NotSupportedException($"Unsupported parameter type {arguments[i].GetType()} on x86");
+					}
+				}
 
-		        instructions.Add(Instruction.Create(Code.Call_rm32, regFun));
+				// cannot do call directly, it seems
+				c.AddInstruction(Instruction.Create(Code.Call_rm32, regFun));
 
-		        if (cleanStack && arguments.Length > 0)
-			        instructions.Add(Instruction.Create(Code.Add_rm32_imm8, Register.ESP, arguments.Length * IntPtr.Size));
-	        } else {
-		        // calling convention: https://docs.microsoft.com/en-us/cpp/build/x64-calling-convention?view=vs-2019
-		        const Register tempReg = Register.RAX;
+				if (cleanStack && arguments.Length > 0)
+					c.add(esp, arguments.Length * IntPtr.Size);
+			} else {
+				// calling convention: https://docs.microsoft.com/en-us/cpp/build/x64-calling-convention?view=vs-2019
+				var tempReg = rax;
 
-		        // push the temp register so we can use it
-		        instructions.Add(Instruction.Create(Code.Push_r64, tempReg));
+				// push the temp register so we can use it
+				c.push(tempReg);
 
-		        // set arguments
-		        for (int i = arguments.Length - 1; i >= 0; i--) {
-			        var arg = arguments[i];
-			        Register argReg = i switch { 0 => Register.RCX, 1 => Register.RDX, 2 => Register.R8, 3 => Register.R9, _ => Register.None };
-			        if (i > 3) {
-				        // push on the stack, keeping in mind that we pushed the temp reg onto the stack too
-				        if (arg is Register r) {
-					        instructions.Add(Instruction.Create(Code.Mov_rm64_r64, new MemoryOperand(Register.RSP, 0x20 + (i - 3) * 8), r));
-				        } else {
-					        instructions.Add(Instruction.Create(Code.Mov_r64_imm64, tempReg, convertToLong(arg)));
-					        instructions.Add(Instruction.Create(Code.Mov_rm64_r64, new MemoryOperand(Register.RSP, 0x20 + (i - 3) * 8), tempReg));
-				        }
-			        } else {
-				        // move to correct register
-				        if (arg is Register r) {
-					        instructions.Add(Instruction.Create(Code.Mov_r64_rm64, argReg, r));
-				        } else {
-							instructions.Add(Instruction.Create(Code.Mov_r64_imm64, argReg, convertToLong(arg)));
-				        }
-			        }
+				// set arguments
+				for (int i = arguments.Length - 1; i >= 0; i--) {
+					var arg = arguments[i];
+					var argReg = i switch { 0 => rcx, 1 => rdx, 2 => r8, 3 => r9, _ => default };
+					if (i > 3) {
+						// push on the stack, keeping in mind that we pushed the temp reg onto the stack too
+						if (arg is AssemblerRegister64 r) {
+							c.mov(__[rsp + 0x20 + (i - 3) * 8], r);
+						} else {
+							c.mov(tempReg, convertToLong(arg));
+							c.mov(__[rsp + 0x20 + (i - 3) * 8], tempReg);
+						}
+					} else {
+						// move to correct register
+						if (arg is AssemblerRegister64 r) {
+							c.mov(argReg, r);
+						} else {
+							c.mov(argReg, convertToLong(arg));
+						}
+					}
 
-			        long convertToLong(object o) => o switch {
-				        IntPtr p => p.ToInt64(),
-				        UIntPtr p => (long)p.ToUInt64(),
-				        _ => Convert.ToInt64(o),
-			        };
-		        }
+					long convertToLong(object o) => o switch {
+						IntPtr p => p.ToInt64(),
+						UIntPtr p => (long)p.ToUInt64(),
+						_ => Convert.ToInt64(o),
+					};
+				}
 
-		        // pop temp register again
-		        instructions.Add(Instruction.Create(Code.Pop_r64, tempReg));
+				// pop temp register again
+				c.pop(tempReg);
 
-		        // call the function
-		        instructions.Add(Instruction.Create(Code.Call_rm64, regFun));
-	        }
-        }
+				// call the function
+				c.AddInstruction(Instruction.Create(Code.Call_rm64, regFun));
+			}
+		}
 
-		public static IntPtr RunRemoteCode(IntPtr hProc, InstructionList instructions, bool x86)
+		public static IntPtr RunRemoteCode(IntPtr hProc, IReadOnlyList<Instruction> instructions, bool x86)
 		{
 			var cw = new CodeWriterImpl();
-			var ib = new InstructionBlock(cw, instructions, 0);
+			var ib = new InstructionBlock(cw, new List<Instruction>(instructions), 0);
 			if (!BlockEncoder.TryEncode(x86 ? 32 : 64, ib, out string? errMsg, out _))
 				throw new Exception("Error during Iced encode: " + errMsg);
 			byte[] bytes = cw.ToArray();
