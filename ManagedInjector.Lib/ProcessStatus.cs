@@ -18,5 +18,7 @@ namespace HoLLy.ManagedInjector
 		/// No supported .NET runtime was found in the target process.
 		/// </summary>
 		NoRuntimeFound,
+
+		// TODO: no permissions (admin)
 	}
 }

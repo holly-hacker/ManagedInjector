@@ -1,19 +1,72 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using HoLLy.ManagedInjector.Injectors;
 
 namespace HoLLy.ManagedInjector
 {
 	public class InjectableProcess : IDisposable
 	{
+		private const Native.ProcessAccessFlags FlagsForInject = Native.ProcessAccessFlags.CreateThread |
+		                                                         Native.ProcessAccessFlags.QueryInformation |
+		                                                         Native.ProcessAccessFlags.VirtualMemoryOperation |
+		                                                         Native.ProcessAccessFlags.VirtualMemoryRead |
+		                                                         Native.ProcessAccessFlags.VirtualMemoryWrite;
+
+		private const Native.ProcessAccessFlags BasicFlags = Native.ProcessAccessFlags.QueryInformation;
+
 		private readonly int _pid;
+		private readonly Process _process;
 		private IntPtr _handle;
+		private bool _isHandleFull;
+		private bool? _is64Bit;
 		private ProcessStatus _status = ProcessStatus.Unknown;
 		private ProcessArchitecture _architecture = ProcessArchitecture.Unknown;
 
 		public InjectableProcess(int pid)
 		{
 			_pid = pid;
+			_process = Process.GetProcessById(pid);
+		}
+
+		public int Pid => _pid;
+		public bool Is64Bit => _is64Bit ??= NativeHelper.Is64BitProcess(_handle);
+
+		/// <summary>
+		/// Get a handle to the process. This is only guaranteed to have basic flags set.
+		/// </summary>
+		public IntPtr Handle
+		{
+			get
+			{
+				if (_handle == IntPtr.Zero)
+					_handle = NativeHelper.OpenProcess(BasicFlags, _pid);
+
+				return _handle;
+			}
+		}
+
+		/// <summary>
+		/// Gets a handle to the process that is guaranteed to have more flags set.
+		/// </summary>
+		public IntPtr FullHandle
+		{
+			get
+			{
+				if (!_isHandleFull)
+				{
+					Native.CloseHandle(_handle);
+					_handle = IntPtr.Zero;
+				}
+
+				if (_handle == IntPtr.Zero)
+				{
+					_handle = NativeHelper.OpenProcess(FlagsForInject, _pid);
+					_isHandleFull = true;
+				}
+
+				return _handle;
+			}
 		}
 
 		public ProcessStatus GetStatus()
@@ -21,9 +74,7 @@ namespace HoLLy.ManagedInjector
 			if (_status != ProcessStatus.Unknown)
 				return _status;
 
-			var handle = GetHandle();
-
-			if (NativeHelper.In64BitProcess != NativeHelper.Is64BitProcess(handle))
+			if (NativeHelper.In64BitProcess != NativeHelper.Is64BitProcess(Handle))
 				return _status = ProcessStatus.ArchitectureMismatch;
 
 			if (GetArchitecture() == ProcessArchitecture.Unknown)
@@ -37,10 +88,10 @@ namespace HoLLy.ManagedInjector
 			if (_architecture != ProcessArchitecture.Unknown)
 				return _architecture;
 
-			// TODO: no architectures detected yet
 			using var process = Process.GetProcessById(_pid);
 
-			bool HasModule(string s) => process.Modules.OfType<ProcessModule>().Any(x => x.ModuleName.Equals(s, StringComparison.InvariantCultureIgnoreCase));
+			bool HasModule(string s) => process.Modules.OfType<ProcessModule>()
+				.Any(x => x.ModuleName.Equals(s, StringComparison.InvariantCultureIgnoreCase));
 
 			// .NET 2 has mscoree and mscorwks
 			// .NET 4 has mscoree and clr
@@ -66,13 +117,25 @@ namespace HoLLy.ManagedInjector
 			return ProcessArchitecture.Unknown;
 		}
 
-		private IntPtr GetHandle()
+		public void Inject(string dllPath, string typeName, string methodName)
 		{
-			if (_handle == IntPtr.Zero)
-				_handle = Native.OpenProcess(Native.ProcessAccessFlags.QueryInformation, false, _pid);
+			var arch = GetArchitecture();
+			IInjector injector = arch switch
+			{
+				ProcessArchitecture.NetFrameworkV2 => new FrameworkV2Injector(),
+				ProcessArchitecture.NetFrameworkV4 => new FrameworkV4Injector(),
+				ProcessArchitecture.Mono => throw new NotImplementedException("mono injector not yet implemented"),
+				ProcessArchitecture.NetCore => throw new NotImplementedException("mono injector not yet implemented"),
+				ProcessArchitecture.Unknown => throw new Exception(
+					"Tried to inject into process with unknown architecture"),
+				_ => throw new NotSupportedException($"No injector found for architecture {arch}"),
+			};
 
-			return _handle;
+			Inject(injector, dllPath, typeName, methodName);
 		}
+
+		public void Inject(IInjector injector, string dllPath, string typeName, string methodName) =>
+			injector.Inject(this, dllPath, typeName, methodName);
 
 		private void ReleaseUnmanagedResources()
 		{

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using CommandLine;
 using HoLLy.ManagedInjector;
@@ -10,7 +11,8 @@ namespace ManagedInjector.CLI
 	{
 		private static void Main(string[] args)
 		{
-			var result = Parser.Default.ParseArguments<CliOptions>(args)
+			Parser.Default
+				.ParseArguments<CliOptions>(args)
 				.WithParsed(Run);
 		}
 
@@ -23,8 +25,25 @@ namespace ManagedInjector.CLI
 			Console.WriteLine("Status: " + process.GetStatus());
 			Console.WriteLine("Arch: " + process.GetArchitecture());
 
+			var dllPath = CopyToTempPath(cli.DllPath);
+			Console.WriteLine("Copied DLL to " + dllPath);
+
+			process.Inject(dllPath, cli.EntryType, cli.EntryMethod);
+
 			if (process.GetStatus() != ProcessStatus.Ok)
 				throw new Exception("Expected OK status for process");
+		}
+
+		public static string CopyToTempPath(string path)
+		{
+			string dir = Path.GetTempPath();
+
+			if (!Directory.Exists(dir))
+				Directory.CreateDirectory(dir);
+
+			string newPath = Path.Combine(dir, Guid.NewGuid() + Path.GetExtension(path));
+			File.Copy(path, newPath);
+			return newPath;
 		}
 
 		private static int GetProcessId(CliOptions cli)
