@@ -45,87 +45,87 @@ namespace HoLLy.ManagedInjector.Injectors
 			const string buildFlavor = "wks";    // WorkStation
 
 			var ppv = alloc(IntPtr.Size);
-            var riid = allocBytes(iidIclrRuntimeHost.ToByteArray());
-            var rcslid = allocBytes(clsidClrRuntimeHost.ToByteArray());
-            var pwszBuildFlavor = allocString(buildFlavor);
-            var pwszVersion = allocString(clrVersion);
+			var riid = allocBytes(iidIclrRuntimeHost.ToByteArray());
+			var rcslid = allocBytes(clsidClrRuntimeHost.ToByteArray());
+			var pwszBuildFlavor = allocString(buildFlavor);
+			var pwszVersion = allocString(clrVersion);
 
-            var pReturnValue = alloc(4);
-            var pwzArgument = allocString(args);
-            var pwzMethodName = allocString(methodName);
-            var pwzTypeName = allocString(typeFullName);
-            var pwzAssemblyPath = allocString(asmPath);
+			var pReturnValue = alloc(4);
+			var pwzArgument = allocString(args);
+			var pwzMethodName = allocString(methodName);
+			var pwzTypeName = allocString(typeFullName);
+			var pwzAssemblyPath = allocString(asmPath);
 
-            var c = new Assembler(x86 ? 32 : 64);
+			var c = new Assembler(x86 ? 32 : 64);
 
-            void AddCallReg(Register r, params object[] callArgs) => CodeInjectionUtils.AddCallStub(c, r, callArgs, x86);
-            void AddCallPtr(IntPtr fn, params object[] callArgs) => CodeInjectionUtils.AddCallStub(c, fn, callArgs, x86);
+			void AddCallReg(Register r, params object[] callArgs) => CodeInjectionUtils.AddCallStub(c, r, callArgs, x86);
+			void AddCallPtr(IntPtr fn, params object[] callArgs) => CodeInjectionUtils.AddCallStub(c, fn, callArgs, x86);
 
-            if (x86) {
-                // call CorBindToRuntimeEx
-                AddCallPtr(fnAddr, pwszVersion, pwszBuildFlavor, (byte)0, rcslid, riid, ppv);
+			if (x86) {
+				// call CorBindToRuntimeEx
+				AddCallPtr(fnAddr, pwszVersion, pwszBuildFlavor, (byte)0, rcslid, riid, ppv);
 
-                // call ICLRRuntimeHost::Start
-                c.mov(edx, __[ppv.ToInt32()]);
-                c.mov(eax, __[edx]);
-                c.mov(eax, __[eax + 0x0C]);
-                AddCallReg(eax, edx);
+				// call ICLRRuntimeHost::Start
+				c.mov(edx, __[ppv.ToInt32()]);
+				c.mov(eax, __[edx]);
+				c.mov(eax, __[eax + 0x0C]);
+				AddCallReg(eax, edx);
 
-                // call ICLRRuntimeHost::ExecuteInDefaultAppDomain
-                c.mov(edx, __[ppv.ToInt32()]);
-                c.mov(eax, __[edx]);
-                c.mov(eax, __[eax + 0x2C]);
-                AddCallReg(eax, edx, pwzAssemblyPath, pwzTypeName, pwzMethodName, pwzArgument, pReturnValue);
+				// call ICLRRuntimeHost::ExecuteInDefaultAppDomain
+				c.mov(edx, __[ppv.ToInt32()]);
+				c.mov(eax, __[edx]);
+				c.mov(eax, __[eax + 0x2C]);
+				AddCallReg(eax, edx, pwzAssemblyPath, pwzTypeName, pwzMethodName, pwzArgument, pReturnValue);
 
-                c.ret();
-            } else {
-                const int maxStackIndex = 3;
-                const int stackOffset = 0x20;
-                c.sub(rsp, stackOffset + maxStackIndex * 8);
+				c.ret();
+			} else {
+				const int maxStackIndex = 3;
+				const int stackOffset = 0x20;
+				c.sub(rsp, stackOffset + maxStackIndex * 8);
 
-                // call CorBindToRuntimeEx
-                AddCallPtr(fnAddr, pwszVersion, pwszBuildFlavor, 0, rcslid, riid, ppv);
+				// call CorBindToRuntimeEx
+				AddCallPtr(fnAddr, pwszVersion, pwszBuildFlavor, 0, rcslid, riid, ppv);
 
-                // call pClrHost->Start();
-                c.mov(rcx, ppv.ToInt64());
-                c.mov(rcx, __[rcx]);
-                c.mov(rax, __[rcx]);
-                c.mov(rdx, __[rax + 0x18]);
-                AddCallReg(rdx, rcx);
+				// call pClrHost->Start();
+				c.mov(rcx, ppv.ToInt64());
+				c.mov(rcx, __[rcx]);
+				c.mov(rax, __[rcx]);
+				c.mov(rdx, __[rax + 0x18]);
+				AddCallReg(rdx, rcx);
 
-                // call pClrHost->ExecuteInDefaultAppDomain()
-                c.mov(rcx, ppv.ToInt64());
-                c.mov(rcx, __[rcx]);
-                c.mov(rax, __[rcx]);
-                c.mov(rax, __[rax + 0x58]);
-                AddCallReg(rax, rcx, pwzAssemblyPath, pwzTypeName, pwzMethodName, pwzArgument, pReturnValue);
+				// call pClrHost->ExecuteInDefaultAppDomain()
+				c.mov(rcx, ppv.ToInt64());
+				c.mov(rcx, __[rcx]);
+				c.mov(rax, __[rcx]);
+				c.mov(rax, __[rax + 0x58]);
+				AddCallReg(rax, rcx, pwzAssemblyPath, pwzTypeName, pwzMethodName, pwzArgument, pReturnValue);
 
-                c.add(rsp, stackOffset + maxStackIndex * 8);
+				c.add(rsp, stackOffset + maxStackIndex * 8);
 
-                c.ret();
-            }
+				c.ret();
+			}
 
-            return c.Instructions;
+			return c.Instructions;
 
-            IntPtr alloc(int size, int protection = 0x04) => Native.VirtualAllocEx(hProc, IntPtr.Zero, (uint)size, 0x1000, protection);
-            void writeBytes(IntPtr address, byte[] b) => Native.WriteProcessMemory(hProc, address, b, (uint)b.Length, out _);
-            void writeString(IntPtr address, string str) => writeBytes(address, new UnicodeEncoding().GetBytes(str));
+			IntPtr alloc(int size, int protection = 0x04) => Native.VirtualAllocEx(hProc, IntPtr.Zero, (uint)size, 0x1000, protection);
+			void writeBytes(IntPtr address, byte[] b) => Native.WriteProcessMemory(hProc, address, b, (uint)b.Length, out _);
+			void writeString(IntPtr address, string str) => writeBytes(address, new UnicodeEncoding().GetBytes(str));
 
-            IntPtr allocString(string? str)
-            {
-                if (str is null) return IntPtr.Zero;
+			IntPtr allocString(string? str)
+			{
+				if (str is null) return IntPtr.Zero;
 
-                IntPtr pString = alloc(str.Length * 2 + 2);
-                writeString(pString, str);
-                return pString;
-            }
+				IntPtr pString = alloc(str.Length * 2 + 2);
+				writeString(pString, str);
+				return pString;
+			}
 
-            IntPtr allocBytes(byte[] buffer)
-            {
-                IntPtr pBuffer = alloc(buffer.Length);
-                writeBytes(pBuffer, buffer);
-                return pBuffer;
-            }
+			IntPtr allocBytes(byte[] buffer)
+			{
+				IntPtr pBuffer = alloc(buffer.Length);
+				writeBytes(pBuffer, buffer);
+				return pBuffer;
+			}
 		}
 	}
 }

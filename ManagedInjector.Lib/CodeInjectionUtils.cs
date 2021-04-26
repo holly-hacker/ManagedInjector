@@ -173,7 +173,11 @@ namespace HoLLy.ManagedInjector
 			var ptrStub = Native.VirtualAllocEx(hProc, IntPtr.Zero, (uint)bytes.Length, 0x1000, 0x40);
 			Native.WriteProcessMemory(hProc, ptrStub, bytes, (uint)bytes.Length, out _);
 			Console.WriteLine("Written to 0x" + ptrStub.ToInt64().ToString("X8"));
+
+#if DEBUG
+			Console.WriteLine("Press ENTER to start remote thread (you have the chance to place a breakpoint now)");
 			Console.ReadLine();
+#endif
 
 			var thread = Native.CreateRemoteThread(hProc, IntPtr.Zero, 0u, ptrStub, IntPtr.Zero, 0u, IntPtr.Zero);
 
