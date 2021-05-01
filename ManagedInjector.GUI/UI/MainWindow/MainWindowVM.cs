@@ -161,6 +161,16 @@ namespace ManagedInjector.GUI.UI.MainWindow
 
 			static bool IsProcessCandidate2(UserProcess arg)
 			{
+				// TODO, HACK: some injectors are not yet finished, so ignore those
+				try
+				{
+					_ = arg.InjectableProcess.GetInjector();
+				}
+				catch (Exception)
+				{
+					return false;
+				}
+
 				return arg.Status switch
 				{
 					ProcessStatus.Unknown => false,
