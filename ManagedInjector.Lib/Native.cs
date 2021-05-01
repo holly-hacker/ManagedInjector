@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace HoLLy.ManagedInjector
 {
-	internal static class Native
+	public static class Native
 	{
 		[DllImport("kernel32.dll")]
 		public static extern int GetLastError();

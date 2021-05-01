@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using AsmResolver.DotNet;
 using HoLLy.ManagedInjector;
@@ -29,8 +30,16 @@ namespace ManagedInjector.GUI.UI.MainWindow
 			SelectAssemblyCommand = new ActionCommand(SelectAssembly);
 			InjectCommand = new ActionCommand(Inject);
 
-			// TODO: should not be here, blocks UI thread during startup and could throw
+			// TODO: should be done in the background. currently blocks UI thread during startup and could throw
 			RefreshProcesses();
+
+			// this should not be shown at any time, but it's here in case some poor guy compiles this as 32bit
+			if (NativeHelper.In64BitMachine && !NativeHelper.In64BitProcess)
+			{
+				const string complain = "You launched this injector as a 32-bit process under a 64-bit host. You will" +
+				                        " be unable to inject into 64-bit processes.";
+				MessageBox.Show(complain, "Warning!");
+			}
 		}
 
 		public string SelectedProcessId => SelectedProcess?.Pid.ToString() ?? "<none>";

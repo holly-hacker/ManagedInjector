@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace HoLLy.ManagedInjector
 {
-	internal static class NativeHelper
+	public static class NativeHelper
 	{
 		public static bool In64BitProcess { get; } = Is64BitProcess();
 		public static bool In64BitMachine { get; } = Is64BitMachine();
