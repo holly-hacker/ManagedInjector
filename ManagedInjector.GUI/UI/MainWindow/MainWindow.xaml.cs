@@ -1,4 +1,5 @@
-﻿using MahApps.Metro.Controls;
+﻿using System.Windows.Input;
+using MahApps.Metro.Controls;
 
 namespace ManagedInjector.GUI.UI.MainWindow
 {
@@ -11,6 +12,11 @@ namespace ManagedInjector.GUI.UI.MainWindow
 		{
 			InitializeComponent();
 			DataContext = new MainWindowVM(this);
+		}
+
+		private void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+		{
+			((MainWindowVM) DataContext)?.SelectAssemblyCommand.Execute(null);
 		}
 	}
 }

@@ -14,14 +14,16 @@
             <ColumnDefinition Width="256px" />
         </Grid.ColumnDefinitions>
 
+        <!-- setting event on DataGrid instead of DataGridRow because that doesn't seem to work -->
         <DataGrid Grid.Column="0"
                   ItemsSource="{Binding Processes}" SelectedItem="{Binding SelectedProcess}"
-                  AutoGenerateColumns="False" IsReadOnly="True">
+                  AutoGenerateColumns="False"
+                  MouseDoubleClick="DataGrid_MouseDoubleClick">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Pid" Width="64" Binding="{Binding Pid, Mode=OneWay}" />
-                <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=OneWay}" />
-                <DataGridTextColumn Header="Type" Binding="{Binding ArchitectureText, Mode=OneWay}" />
-                <DataGridTextColumn Header="Arch." Binding="{Binding BitnessText, Mode=OneWay}" />
+                <DataGridTextColumn Header="Pid" Width="64" Binding="{Binding Pid, Mode=OneWay}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=OneWay}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Type" Binding="{Binding ArchitectureText, Mode=OneWay}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Arch." Binding="{Binding BitnessText, Mode=OneWay}" IsReadOnly="True"/>
             </DataGrid.Columns>
         </DataGrid>
 
@@ -46,7 +48,7 @@
                     <StackPanel>
                         <!-- TODO: listbox with recents -->
                         <!-- TODO: checkbox for copy-to-temp -->
-                        <Button IsEnabled="{Binding DllButtonEnabled, Mode=OneWay}" Command="{Binding SelectAssemblyCommand, Mode=OneTime}">Select DLL</Button>
+                        <Button IsEnabled="{Binding SelectAssemblyButtonEnabled, Mode=OneWay}" Command="{Binding SelectAssemblyCommand, Mode=OneTime}">Select DLL</Button>
 
                         <TextBlock TextWrapping="Wrap">
                             <Run FontWeight="Bold">Path:</Run>

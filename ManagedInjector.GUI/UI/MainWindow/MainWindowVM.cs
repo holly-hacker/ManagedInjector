@@ -50,7 +50,7 @@ namespace ManagedInjector.GUI.UI.MainWindow
 		public string SelectedType => _selectedAssembly?.Type ?? "<none>";
 		public string SelectedMethod => _selectedAssembly?.Method ?? "<none>";
 
-		public bool DllButtonEnabled => SelectedProcess is not null;
+		public bool SelectAssemblyButtonEnabled => SelectedProcess is not null;
 		public bool InjectButtonEnabled => SelectedPath is not null && SelectedType is not null && SelectedMethod is not null;
 
 		public ICommand SelectAssemblyCommand { get; }
@@ -78,7 +78,7 @@ namespace ManagedInjector.GUI.UI.MainWindow
 				OnPropertyChanged(nameof(SelectedProcessId));
 				OnPropertyChanged(nameof(SelectedProcessName));
 				OnPropertyChanged(nameof(SelectedProcessFileName));
-				OnPropertyChanged(nameof(DllButtonEnabled));
+				OnPropertyChanged(nameof(SelectAssemblyButtonEnabled));
 
 				SelectedAssembly = null;
 			}
@@ -107,6 +107,9 @@ namespace ManagedInjector.GUI.UI.MainWindow
 		{
 			try
 			{
+				if (!SelectAssemblyButtonEnabled)
+					return;
+
 				// do this first. if it throws (eg. injector not supported), we want to exit before asking for a file
 				var injector = SelectedProcess.InjectableProcess.GetInjector();
 
@@ -123,7 +126,10 @@ namespace ManagedInjector.GUI.UI.MainWindow
 				var file = AssemblyDefinition.FromFile(path);
 				var mod = file.ManifestModule;
 
-				var dialog = new EntryPointSelectDialog(mod, injector);
+				var dialog = new EntryPointSelectDialog(mod, injector)
+				{
+					WindowStartupLocation = WindowStartupLocation.CenterScreen, // CenterOwner does not work?
+				};
 				if (dialog.ShowDialog() != true) return;
 
 				SelectedAssembly = new UserAssembly(path, dialog.SelectedType, dialog.SelectedMethod);

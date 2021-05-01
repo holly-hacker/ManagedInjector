@@ -14,6 +14,11 @@
         </Grid.RowDefinitions>
 
         <ListView Grid.Row="0" ItemsSource="{Binding Methods}" SelectedItem="{Binding SelectedMethod}">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <EventSetter Event="MouseDoubleClick" Handler="ListViewItem_MouseDoubleClick"/>
+                </Style>
+            </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Type" DisplayMemberBinding="{Binding Type, Mode=OneWay}" />
