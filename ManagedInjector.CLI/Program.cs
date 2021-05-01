@@ -18,7 +18,7 @@ namespace ManagedInjector.CLI
 
 		private static void Run(CliOptions cli)
 		{
-			int pid = GetProcessId(cli);
+			uint pid = GetProcessId(cli);
 			var process = new InjectableProcess(pid);
 
 			Console.WriteLine("PID: " + pid);
@@ -46,7 +46,7 @@ namespace ManagedInjector.CLI
 			return newPath;
 		}
 
-		private static int GetProcessId(CliOptions cli)
+		private static uint GetProcessId(CliOptions cli)
 		{
 			if (cli.ProcessName is not null)
 			{
@@ -66,7 +66,7 @@ namespace ManagedInjector.CLI
 				if (processes.Length > 1)
 					throw new Exception($"Multiple processes found by name '{cli.ProcessName}'.");
 
-				return processes.Single().Id;
+				return (uint) processes.Single().Id;
 			}
 
 			if (cli.ProcessId is not null)

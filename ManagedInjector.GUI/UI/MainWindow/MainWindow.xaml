@@ -1,0 +1,72 @@
+﻿<controls:MetroWindow x:Class="ManagedInjector.GUI.UI.MainWindow.MainWindow"
+                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                      xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+                      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                      xmlns:local="clr-namespace:ManagedInjector.GUI"
+                      xmlns:ui="clr-namespace:ManagedInjector.GUI.UI.MainWindow"
+                      mc:Ignorable="d"
+                      Title="ManagedInjector.GUI" Height="450" Width="800">
+    <Grid d:DataContext="{d:DesignInstance ui:MainWindowVM}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="256px" />
+        </Grid.ColumnDefinitions>
+
+        <DataGrid Grid.Column="0"
+                  ItemsSource="{Binding Processes}" SelectedItem="{Binding SelectedProcess}"
+                  AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Pid" Width="64" Binding="{Binding Pid, Mode=OneWay}" />
+                <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=OneWay}" />
+                <DataGridTextColumn Header="Type" Binding="{Binding ArchitectureText, Mode=OneWay}" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <DockPanel Grid.Column="1">
+            <StackPanel DockPanel.Dock="Top">
+                <!-- TODO: info about own system (explains only 64bit or 32bit processes are shown), or add to window title -->
+                <GroupBox Margin="4" Header="Selected process">
+                    <StackPanel>
+                        <TextBlock TextWrapping="Wrap">
+                            <Run FontWeight="Bold">PID:</Run>
+                            <Run Text="{Binding SelectedProcessId, Mode=OneWay}" />
+                            <LineBreak />
+                            <Run FontWeight="Bold">Name:</Run>
+                            <Run Text="{Binding SelectedProcessName, Mode=OneWay}" />
+                            <LineBreak />
+                            <Run FontWeight="Bold">Path:</Run>
+                            <Run Text="{Binding SelectedProcessFileName, Mode=OneWay}" />
+                        </TextBlock>
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox Margin="4" Header="Assembly to inject">
+                    <StackPanel>
+                        <!-- TODO: listbox with recents -->
+                        <!-- TODO: checkbox for copy-to-temp -->
+                        <Button IsEnabled="{Binding DllButtonEnabled, Mode=OneWay}" Command="{Binding SelectAssemblyCommand, Mode=OneTime}">Select DLL</Button>
+
+                        <TextBlock TextWrapping="Wrap">
+                            <Run FontWeight="Bold">Path:</Run>
+                            <Run Text="{Binding SelectedPath, Mode=OneWay}" />
+                            <LineBreak />
+                            <Run FontWeight="Bold">Type:</Run>
+                            <Run Text="{Binding SelectedType, Mode=OneWay}" />
+                            <LineBreak />
+                            <Run FontWeight="Bold">Method:</Run>
+                            <Run Text="{Binding SelectedMethod, Mode=OneWay}" />
+                        </TextBlock>
+                    </StackPanel>
+                </GroupBox>
+                <!-- TODO: button to refresh processes -->
+                <Button IsEnabled="{Binding InjectButtonEnabled, Mode=OneWay}"  Command="{Binding InjectCommand, Mode=OneTime}">Inject</Button>
+            </StackPanel>
+
+            <Grid DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
+                <Label>Hello uwu</Label>
+                <!-- TODO:About button -->
+            </Grid>
+        </DockPanel>
+    </Grid>
+</controls:MetroWindow>

@@ -15,7 +15,7 @@ namespace HoLLy.ManagedInjector
 		private static bool Is64BitMachine() => In64BitProcess || IsWow64Process(Process.GetCurrentProcess().Handle);
 		private static bool Is64BitProcess() => IntPtr.Size == 8;
 
-		public static IntPtr OpenProcess(Native.ProcessAccessFlags dwDesiredAccess, int dwProcessId)
+		public static IntPtr OpenProcess(Native.ProcessAccessFlags dwDesiredAccess, uint dwProcessId)
 		{
 			var ret = Native.OpenProcess(dwDesiredAccess, false, dwProcessId);
 

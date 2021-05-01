@@ -10,7 +10,7 @@ namespace HoLLy.ManagedInjector
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		public static extern IntPtr OpenProcess(ProcessAccessFlags dwDesiredAccess, bool bInheritHandle,
-			int dwProcessId);
+			uint dwProcessId);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		public static extern bool CloseHandle(IntPtr hObject);

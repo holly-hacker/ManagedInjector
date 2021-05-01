@@ -13,6 +13,8 @@ namespace HoLLy.ManagedInjector.Injectors
 		private static readonly Guid clsidClrRuntimeHost = new Guid(0x90F1A06E, 0x7712, 0x4762, 0x86, 0xB5, 0x7A, 0x5E, 0xBA, 0x6B, 0xDB, 0x02);
 		private static readonly Guid iidIclrRuntimeHost = new Guid(0x90F1A06C, 0x7712, 0x4762, 0x86, 0xB5, 0x7A, 0x5E, 0xBA, 0x6B, 0xDB, 0x02);
 
+		public EntryPointType EntryPoint => EntryPointType.TakesStringReturnsInt;
+
 		protected abstract string GetClrVersion();
 
 		public void Inject(InjectableProcess process, string dllPath, string typeName, string methodName)
@@ -27,9 +29,9 @@ namespace HoLLy.ManagedInjector.Injectors
 			Console.WriteLine("Thread handle: " + hThread.ToInt32().ToString("X8")); // TODO: remove
 		}
 
-		private static IntPtr GetCorBindToRuntimeExAddress(int pid, IntPtr hProc, bool x86)
+		private static IntPtr GetCorBindToRuntimeExAddress(uint pid, IntPtr hProc, bool x86)
 		{
-			var proc = Process.GetProcessById(pid);
+			var proc = Process.GetProcessById((int) pid);
 			var mod = proc.Modules.OfType<ProcessModule>().FirstOrDefault(m => m.ModuleName.Equals("mscoree.dll", StringComparison.InvariantCultureIgnoreCase));
 
 			if (mod is null)

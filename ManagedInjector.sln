@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManagedInjector.Lib", "Mana
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManagedInjector.CLI", "ManagedInjector.CLI\ManagedInjector.CLI.csproj", "{4F7965E3-6CCE-45BA-9321-E07A0D08EC7F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManagedInjector.GUI", "ManagedInjector.GUI\ManagedInjector.GUI.csproj", "{CDC62E98-A3F7-4E3F-AE01-8C9A724A0D9A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{4F7965E3-6CCE-45BA-9321-E07A0D08EC7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4F7965E3-6CCE-45BA-9321-E07A0D08EC7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4F7965E3-6CCE-45BA-9321-E07A0D08EC7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CDC62E98-A3F7-4E3F-AE01-8C9A724A0D9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDC62E98-A3F7-4E3F-AE01-8C9A724A0D9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDC62E98-A3F7-4E3F-AE01-8C9A724A0D9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDC62E98-A3F7-4E3F-AE01-8C9A724A0D9A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

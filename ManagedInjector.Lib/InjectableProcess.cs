@@ -15,21 +15,19 @@ namespace HoLLy.ManagedInjector
 
 		private const Native.ProcessAccessFlags BasicFlags = Native.ProcessAccessFlags.QueryInformation;
 
-		private readonly int _pid;
-		private readonly Process _process;
 		private IntPtr _handle;
 		private bool _isHandleFull;
 		private bool? _is64Bit;
 		private ProcessStatus _status = ProcessStatus.Unknown;
 		private ProcessArchitecture _architecture = ProcessArchitecture.Unknown;
 
-		public InjectableProcess(int pid)
+		public InjectableProcess(uint pid)
 		{
-			_pid = pid;
-			_process = Process.GetProcessById(pid);
+			Pid = pid;
 		}
 
-		public int Pid => _pid;
+		public uint Pid { get; }
+
 		public bool Is64Bit => _is64Bit ??= NativeHelper.Is64BitProcess(_handle);
 
 		/// <summary>
@@ -40,7 +38,7 @@ namespace HoLLy.ManagedInjector
 			get
 			{
 				if (_handle == IntPtr.Zero)
-					_handle = NativeHelper.OpenProcess(BasicFlags, _pid);
+					_handle = NativeHelper.OpenProcess(BasicFlags, Pid);
 
 				return _handle;
 			}
@@ -61,7 +59,7 @@ namespace HoLLy.ManagedInjector
 
 				if (_handle == IntPtr.Zero)
 				{
-					_handle = NativeHelper.OpenProcess(FlagsForInject, _pid);
+					_handle = NativeHelper.OpenProcess(FlagsForInject, Pid);
 					_isHandleFull = true;
 				}
 
@@ -74,13 +72,20 @@ namespace HoLLy.ManagedInjector
 			if (_status != ProcessStatus.Unknown)
 				return _status;
 
-			if (NativeHelper.In64BitProcess != NativeHelper.Is64BitProcess(Handle))
-				return _status = ProcessStatus.ArchitectureMismatch;
+			try
+			{
+				if (NativeHelper.In64BitProcess != NativeHelper.Is64BitProcess(Handle))
+					return _status = ProcessStatus.ArchitectureMismatch;
 
-			if (GetArchitecture() == ProcessArchitecture.Unknown)
-				return _status = ProcessStatus.NoRuntimeFound;
+				if (GetArchitecture() == ProcessArchitecture.Unknown)
+					return _status = ProcessStatus.NoRuntimeFound;
 
-			return _status = ProcessStatus.Ok;
+				return _status = ProcessStatus.Ok;
+			}
+			catch (Exception)
+			{
+				return ProcessStatus.Unknown;
+			}
 		}
 
 		public ProcessArchitecture GetArchitecture()
@@ -88,48 +93,60 @@ namespace HoLLy.ManagedInjector
 			if (_architecture != ProcessArchitecture.Unknown)
 				return _architecture;
 
-			using var process = Process.GetProcessById(_pid);
-
-			bool HasModule(string s) => process.Modules.OfType<ProcessModule>()
-				.Any(x => x.ModuleName.Equals(s, StringComparison.InvariantCultureIgnoreCase));
-
-			// .NET 2 has mscoree and mscorwks
-			// .NET 4 has mscoree and clr
-			// .NET Core 3.1 has coreclr
-			// Some unity games have mono-2.0-bdwgc.dll
-
-			if (HasModule("mscoree.dll"))
+			try
 			{
-				if (HasModule("clr.dll"))
-					return _architecture = ProcessArchitecture.NetFrameworkV4;
+				using var process = Process.GetProcessById((int) Pid);
 
-				if (HasModule("mscorwks.dll"))
-					return _architecture = ProcessArchitecture.NetFrameworkV2;
+				// TODO: speed this up!
+				bool HasModule(string s) => process.Modules.OfType<ProcessModule>()
+					.Any(x => x.ModuleName.Equals(s, StringComparison.InvariantCultureIgnoreCase));
+
+				// .NET 2 has mscoree and mscorwks
+				// .NET 4 has mscoree and clr
+				// .NET Core 3.1 has coreclr
+				// Some unity games have mono-2.0-bdwgc.dll
+
+				if (HasModule("mscoree.dll"))
+				{
+					if (HasModule("clr.dll"))
+						return _architecture = ProcessArchitecture.NetFrameworkV4;
+
+					if (HasModule("mscorwks.dll"))
+						return _architecture = ProcessArchitecture.NetFrameworkV2;
+				}
+
+				if (HasModule("coreclr.dll"))
+					return _architecture = ProcessArchitecture.NetCore;
+
+				// TODO: also check non-bleeding mono dll
+				if (HasModule("mono-2.0-bdwgc.dll"))
+					return _architecture = ProcessArchitecture.Mono;
+
+				return ProcessArchitecture.Unknown;
 			}
+			catch (Exception)
+			{
+				return ProcessArchitecture.Unknown;
+			}
+		}
 
-			if (HasModule("coreclr.dll"))
-				return _architecture = ProcessArchitecture.NetCore;
-
-			// TODO: also check non-bleeding mono dll
-			if (HasModule("mono-2.0-bdwgc.dll"))
-				return _architecture = ProcessArchitecture.Mono;
-
-			return ProcessArchitecture.Unknown;
+		public IInjector GetInjector()
+		{
+			var arch = GetArchitecture();
+			return arch switch
+			{
+				ProcessArchitecture.NetFrameworkV2 => new FrameworkV2Injector(),
+				ProcessArchitecture.NetFrameworkV4 => new FrameworkV4Injector(),
+				ProcessArchitecture.Mono => throw new NotImplementedException("Mono injector is not yet implemented"),
+				ProcessArchitecture.NetCore => throw new NotImplementedException(".NET Core injector is not yet implemented"),
+				ProcessArchitecture.Unknown => throw new Exception("Tried to inject into process with unknown architecture"),
+				_ => throw new NotSupportedException($"No injector found for architecture {arch}"),
+			};
 		}
 
 		public void Inject(string dllPath, string typeName, string methodName)
 		{
-			var arch = GetArchitecture();
-			IInjector injector = arch switch
-			{
-				ProcessArchitecture.NetFrameworkV2 => new FrameworkV2Injector(),
-				ProcessArchitecture.NetFrameworkV4 => new FrameworkV4Injector(),
-				ProcessArchitecture.Mono => throw new NotImplementedException("mono injector not yet implemented"),
-				ProcessArchitecture.NetCore => throw new NotImplementedException("mono injector not yet implemented"),
-				ProcessArchitecture.Unknown => throw new Exception(
-					"Tried to inject into process with unknown architecture"),
-				_ => throw new NotSupportedException($"No injector found for architecture {arch}"),
-			};
+			IInjector injector = GetInjector();
 
 			Inject(injector, dllPath, typeName, methodName);
 		}

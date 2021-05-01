@@ -8,7 +8,7 @@ namespace ManagedInjector.CLI
 		public string? ProcessName { get; set; }
 
 		[Option('p', "pid", Group = "process", Required = true, HelpText = "Specifies the target process id")]
-		public int? ProcessId { get; set; }
+		public uint? ProcessId { get; set; }
 
 		[Option('i', "input", Required = true, HelpText = "The DLL to inject")]
 		public string DllPath { get; set; } = null!;

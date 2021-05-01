@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net5.0-windows</TargetFramework>
+        <UseWPF>true</UseWPF>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AsmResolver.DotNet" Version="4.5.1" />
+      <PackageReference Include="MahApps.Metro" Version="2.4.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ManagedInjector.Lib\ManagedInjector.Lib.csproj" />
+    </ItemGroup>
+
+</Project>

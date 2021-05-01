@@ -1,0 +1,32 @@
+<controls:MetroWindow x:Class="ManagedInjector.GUI.UI.EntryPointSelect.EntryPointSelectDialog"
+                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                      xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                      xmlns:entryPointSelect="clr-namespace:ManagedInjector.GUI.UI.EntryPointSelect"
+                      mc:Ignorable="d"
+                      Title="EntryPointSelectDialog" Height="360" Width="600">
+    <Grid d:DataContext="{d:DesignInstance entryPointSelect:EntryPointSelectionDialogVM }">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+
+        <ListView Grid.Row="0" ItemsSource="{Binding Methods}" SelectedItem="{Binding SelectedMethod}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Type" DisplayMemberBinding="{Binding Type, Mode=OneWay}" />
+                    <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name, Mode=OneWay}" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <StackPanel Grid.Row="1">
+            <TextBlock>
+                <Run FontWeight="Bold">Selected:</Run>
+                <Run Text="{Binding SelectedMethodName, Mode=OneWay}" />
+            </TextBlock>
+            <Button Command="{Binding SubmitCommand, Mode=OneTime}">Select</Button>
+        </StackPanel>
+    </Grid>
+</controls:MetroWindow>
