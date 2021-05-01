@@ -13,7 +13,8 @@ namespace HoLLy.ManagedInjector
 		                                                         Native.ProcessAccessFlags.VirtualMemoryRead |
 		                                                         Native.ProcessAccessFlags.VirtualMemoryWrite;
 
-		private const Native.ProcessAccessFlags BasicFlags = Native.ProcessAccessFlags.QueryInformation;
+		private const Native.ProcessAccessFlags BasicFlags = Native.ProcessAccessFlags.QueryInformation |
+		                                                     Native.ProcessAccessFlags.VirtualMemoryRead;
 
 		private IntPtr _handle;
 		private bool _isHandleFull;
@@ -97,9 +98,8 @@ namespace HoLLy.ManagedInjector
 			{
 				using var process = Process.GetProcessById((int) Pid);
 
-				// TODO: speed this up!
-				bool HasModule(string s) => process.Modules.OfType<ProcessModule>()
-					.Any(x => x.ModuleName.Equals(s, StringComparison.InvariantCultureIgnoreCase));
+				var modules = NativeHelper.GetModules(Handle);
+				bool HasModule(string s) => modules.Contains(s, StringComparer.InvariantCultureIgnoreCase);
 
 				// .NET 2 has mscoree and mscorwks
 				// .NET 4 has mscoree and clr

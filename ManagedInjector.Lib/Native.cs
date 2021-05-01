@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace HoLLy.ManagedInjector
 {
@@ -17,6 +18,13 @@ namespace HoLLy.ManagedInjector
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		public static extern bool IsWow64Process(IntPtr processHandle, out bool wow64Process);
+
+		[DllImport("psapi.dll", SetLastError = true)]
+		public static extern bool EnumProcessModules(IntPtr hProcess, [In] [Out] IntPtr[]? lphModule, uint cb,
+			[MarshalAs(UnmanagedType.U4)] out uint lpcbNeeded);
+
+		[DllImport("psapi.dll", SetLastError = true)]
+		public static extern uint GetModuleBaseName(IntPtr hProcess, IntPtr hModule, [Out] StringBuilder lpBaseName, [In] [MarshalAs(UnmanagedType.U4)] uint nSize);
 
 		/// <remarks> <paramref name="hProcess"/> must have <see cref="ProcessAccessFlags.VirtualMemoryRead"/> access </remarks>
 		/// <seealso> https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-readprocessmemory </seealso>
