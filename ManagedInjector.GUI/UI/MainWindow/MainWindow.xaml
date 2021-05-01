@@ -29,7 +29,6 @@
 
         <DockPanel Grid.Column="1">
             <StackPanel DockPanel.Dock="Top">
-                <!-- TODO: info about own system (explains only 64bit or 32bit processes are shown), or add to window title -->
                 <GroupBox Margin="4" Header="Selected process">
                     <StackPanel>
                         <TextBlock TextWrapping="Wrap">

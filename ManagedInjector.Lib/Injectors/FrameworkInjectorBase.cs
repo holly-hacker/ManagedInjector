@@ -25,7 +25,7 @@ namespace HoLLy.ManagedInjector.Injectors
 			var callStub = CreateCallStub(process.FullHandle, dllPath, typeName, methodName, null, bindToRuntimeAddr, x86, clrVersion);
 
 			var hThread = CodeInjectionUtils.RunRemoteCode(process.FullHandle, callStub, x86);
-			Console.WriteLine("Thread handle: " + hThread.ToInt32().ToString("X8")); // TODO: remove
+			Console.WriteLine("Thread handle: " + hThread.ToInt32().ToString("X8"));
 		}
 
 		private static IntPtr GetCorBindToRuntimeExAddress(uint pid, IntPtr hProc, bool x86)
