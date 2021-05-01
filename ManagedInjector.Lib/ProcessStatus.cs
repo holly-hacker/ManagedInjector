@@ -10,7 +10,7 @@ namespace HoLLy.ManagedInjector
 		Ok,
 
 		/// <summary>
-		/// The target process is 32-bit, while the host process is 64-bit (or vice versa).
+		/// The target process is 64-bit, while the host process is 32-bit.
 		/// </summary>
 		ArchitectureMismatch,
 

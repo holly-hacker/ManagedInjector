@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace HoLLy.ManagedInjector
 {
@@ -19,12 +18,14 @@ namespace HoLLy.ManagedInjector
 		[DllImport("kernel32.dll", SetLastError = true)]
 		public static extern bool IsWow64Process(IntPtr processHandle, out bool wow64Process);
 
-		[DllImport("psapi.dll", SetLastError = true)]
-		public static extern bool EnumProcessModules(IntPtr hProcess, [In] [Out] IntPtr[]? lphModule, uint cb,
-			[MarshalAs(UnmanagedType.U4)] out uint lpcbNeeded);
+		[DllImport("kernel32.dll", SetLastError = true)]
+		public static extern IntPtr CreateToolhelp32Snapshot(SnapshotFlags dwFlags, uint th32ProcessId);
 
-		[DllImport("psapi.dll", SetLastError = true)]
-		public static extern uint GetModuleBaseName(IntPtr hProcess, IntPtr hModule, [Out] StringBuilder lpBaseName, [In] [MarshalAs(UnmanagedType.U4)] uint nSize);
+		[DllImport("kernel32.dll")]
+		public static extern bool Module32First(IntPtr hSnapshot, ref ModuleEntry32 lpme);
+
+		[DllImport("kernel32.dll")]
+		public static extern bool Module32Next(IntPtr hSnapshot, ref ModuleEntry32 lpme);
 
 		/// <remarks> <paramref name="hProcess"/> must have <see cref="ProcessAccessFlags.VirtualMemoryRead"/> access </remarks>
 		/// <seealso> https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-readprocessmemory </seealso>
@@ -73,14 +74,33 @@ namespace HoLLy.ManagedInjector
 		}
 
 		[Flags]
-		public enum FormatMessageFlags : uint
+		public enum SnapshotFlags : uint
 		{
-			AllocateBuffer = 0x00000100,
-			IgnoreInserts = 0x00000200,
-			FromString = 0x00000400,
-			FromHModule = 0x00000800,
-			FromSystem = 0x00001000,
-			ArgumentArray = 0x00002000,
+			HeapList = 0x00000001,
+			Process = 0x00000002,
+			Thread = 0x00000004,
+			Module = 0x00000008,
+			Module32 = 0x00000010,
+			All = HeapList | Process | Thread | Module | Module32,
+			NoHeaps = 0x40000000,
+			Inherit = 0x80000000,
+		}
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		public struct ModuleEntry32
+		{
+			public uint DwSize;
+			public uint Th32ModuleID;
+			public uint Th32ProcessID;
+			public uint GlobalCountUsage;
+			public uint ProcessCountUsage;
+			public IntPtr ModBaseAddr;
+			public uint ModBaseSize;
+			public IntPtr HModule;
+			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 255 + 1)]
+			public string SzModule;
+			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+			public string SzExePath;
 		}
 	}
 }

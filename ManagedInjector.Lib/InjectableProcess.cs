@@ -13,8 +13,7 @@ namespace HoLLy.ManagedInjector
 		                                                         Native.ProcessAccessFlags.VirtualMemoryRead |
 		                                                         Native.ProcessAccessFlags.VirtualMemoryWrite;
 
-		private const Native.ProcessAccessFlags BasicFlags = Native.ProcessAccessFlags.QueryInformation |
-		                                                     Native.ProcessAccessFlags.VirtualMemoryRead;
+		private const Native.ProcessAccessFlags BasicFlags = Native.ProcessAccessFlags.QueryInformation;
 
 		private IntPtr _handle;
 		private bool _isHandleFull;
@@ -29,7 +28,7 @@ namespace HoLLy.ManagedInjector
 
 		public uint Pid { get; }
 
-		public bool Is64Bit => _is64Bit ??= NativeHelper.Is64BitProcess(_handle);
+		public bool Is64Bit => _is64Bit ??= NativeHelper.Is64BitProcess(Handle);
 
 		/// <summary>
 		/// Get a handle to the process. This is only guaranteed to have basic flags set.
@@ -75,7 +74,8 @@ namespace HoLLy.ManagedInjector
 
 			try
 			{
-				if (NativeHelper.In64BitProcess != NativeHelper.Is64BitProcess(Handle))
+				// 64-bit process can target 32-bit, but not the other way around
+				if (!NativeHelper.In64BitProcess && NativeHelper.Is64BitProcess(Handle))
 					return _status = ProcessStatus.ArchitectureMismatch;
 
 				if (GetArchitecture() == ProcessArchitecture.Unknown)
@@ -98,8 +98,10 @@ namespace HoLLy.ManagedInjector
 			{
 				using var process = Process.GetProcessById((int) Pid);
 
-				var modules = NativeHelper.GetModules(Handle);
-				bool HasModule(string s) => modules.Contains(s, StringComparer.InvariantCultureIgnoreCase);
+				var modules = NativeHelper.GetModules(Pid);
+
+				bool HasModule(string s) =>
+					modules.Any(x => x.moduleName.Equals(s, StringComparison.InvariantCultureIgnoreCase));
 
 				// .NET 2 has mscoree and mscorwks
 				// .NET 4 has mscoree and clr
@@ -138,8 +140,10 @@ namespace HoLLy.ManagedInjector
 				ProcessArchitecture.NetFrameworkV2 => new FrameworkV2Injector(),
 				ProcessArchitecture.NetFrameworkV4 => new FrameworkV4Injector(),
 				ProcessArchitecture.Mono => throw new NotImplementedException("Mono injector is not yet implemented"),
-				ProcessArchitecture.NetCore => throw new NotImplementedException(".NET Core injector is not yet implemented"),
-				ProcessArchitecture.Unknown => throw new Exception("Tried to inject into process with unknown architecture"),
+				ProcessArchitecture.NetCore => throw new NotImplementedException(
+					".NET Core injector is not yet implemented"),
+				ProcessArchitecture.Unknown => throw new Exception(
+					"Tried to inject into process with unknown architecture"),
 				_ => throw new NotSupportedException($"No injector found for architecture {arch}"),
 			};
 		}

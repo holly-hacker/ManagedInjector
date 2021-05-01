@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Iced.Intel;
@@ -31,15 +30,15 @@ namespace HoLLy.ManagedInjector.Injectors
 
 		private static IntPtr GetCorBindToRuntimeExAddress(uint pid, IntPtr hProc, bool x86)
 		{
-			var proc = Process.GetProcessById((int) pid);
-			var mod = proc.Modules.OfType<ProcessModule>().FirstOrDefault(m => m.ModuleName.Equals("mscoree.dll", StringComparison.InvariantCultureIgnoreCase));
+			var mods = NativeHelper.GetModules(pid);
+			var mod = mods.SingleOrDefault(x => x.moduleName.Equals("mscoree.dll", StringComparison.InvariantCultureIgnoreCase));
 
-			if (mod is null)
+			if (mod == default)
 				throw new Exception("Couldn't find MSCOREE.DLL, arch mismatch?");
 
-			int fnAddr = CodeInjectionUtils.GetExportAddress(hProc, mod.BaseAddress, "CorBindToRuntimeEx", x86);
+			int fnAddr = CodeInjectionUtils.GetExportAddress(hProc, mod.baseAddress, "CorBindToRuntimeEx", x86);
 
-			return mod.BaseAddress + fnAddr;
+			return mod.baseAddress + fnAddr;
 		}
 
 		private static IReadOnlyList<Instruction> CreateCallStub(IntPtr hProc, string asmPath, string typeFullName, string methodName, string? args, IntPtr fnAddr, bool x86, string clrVersion)

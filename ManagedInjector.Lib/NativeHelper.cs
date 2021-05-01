@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Text;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace HoLLy.ManagedInjector
 {
@@ -10,11 +12,17 @@ namespace HoLLy.ManagedInjector
 		public static bool In64BitProcess { get; } = Is64BitProcess();
 		public static bool In64BitMachine { get; } = Is64BitMachine();
 
-		public static bool Is64BitProcess(IntPtr handle) => Is64BitMachine() && !IsWow64Process(handle);
-
-		private static bool IsWow64Process(IntPtr handle) => Native.IsWow64Process(handle, out bool wow64) && wow64;
+		public static bool Is64BitProcess(IntPtr handle) => In64BitMachine && !IsWow64Process(handle);
 		private static bool Is64BitMachine() => In64BitProcess || IsWow64Process(Process.GetCurrentProcess().Handle);
 		private static bool Is64BitProcess() => IntPtr.Size == 8;
+
+		private static bool IsWow64Process(IntPtr handle)
+		{
+			if (!Native.IsWow64Process(handle, out bool wow64))
+				throw new Win32Exception(Native.GetLastError());
+
+			return wow64;
+		}
 
 		public static IntPtr OpenProcess(Native.ProcessAccessFlags dwDesiredAccess, uint dwProcessId)
 		{
@@ -44,41 +52,31 @@ namespace HoLLy.ManagedInjector
 			return buffer;
 		}
 
-		/// <remarks>
-		/// <paramref name="handle"/> requires <c>PROCESS_QUERY_INFORMATION</c> and <c>PROCESS_VM_READ</c> permissions.
-		/// </remarks>
-		public static string[] GetModules(IntPtr handle)
+		public static IReadOnlyList<(IntPtr baseAddress, string moduleName)> GetModules(uint pid)
 		{
-			// TODO: EnumProcessModulesEx could allow cross-architecture support?
-			// NOTE: could speed this up by stopping the loop when we match an architecture
+			var hSnapshot = Native.CreateToolhelp32Snapshot(Native.SnapshotFlags.Module | Native.SnapshotFlags.Module32, pid);
 
-			if (!Native.EnumProcessModules(handle, null, 0, out uint arraySize))
+			if (hSnapshot == new IntPtr(-1))
 				throw new Win32Exception(Native.GetLastError());
 
-			uint size = (uint) (arraySize / IntPtr.Size);
+			var module = new Native.ModuleEntry32 {DwSize = (uint) Marshal.SizeOf<Native.ModuleEntry32>()};
+			var list = new List<(IntPtr baseAddress, string moduleName)>();
 
-			var modulesHandles = new IntPtr[size];
-
-			if (!Native.EnumProcessModules(handle, modulesHandles, arraySize, out _))
-				throw new Win32Exception(Native.GetLastError());
-
-			var moduleNames = new string[size];
-			for (var i = 0; i < modulesHandles.Length; i++)
+			bool next;
+			do
 			{
-				var hMod = modulesHandles[i];
 
-				var sb = new StringBuilder(0x100);
-				var ret = Native.GetModuleBaseName(handle, hMod, sb, (uint) sb.Capacity);
+				// TODO: handle errors. seems to return 0 or 1 on success, and ERROR_NO_MORE_FILES (18?) on fail
+				next = !list.Any()
+					? Native.Module32First(hSnapshot, ref module)
+					: Native.Module32Next(hSnapshot, ref module);
 
-				if (ret == 0)
-					throw new Win32Exception(Native.GetLastError());
+				if (next)
+					list.Add((module.ModBaseAddr, module.SzModule));
 
-				moduleNames[i] = sb.ToString();
+			} while (next);
 
-				Debug.Assert(ret == sb.ToString().Length);
-			}
-
-			return moduleNames;
+			return list;
 		}
 	}
 }
