@@ -20,6 +20,8 @@ namespace ManagedInjector.GUI.Models
 
 		public ProcessArchitecture Architecture => InjectableProcess.GetArchitecture();
 
+		public string BitnessText => InjectableProcess.Is64Bit ? "64-bit" : "32-bit";
+
 		public string ArchitectureText
 		{
 			get

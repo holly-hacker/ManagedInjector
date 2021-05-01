@@ -21,6 +21,7 @@
                 <DataGridTextColumn Header="Pid" Width="64" Binding="{Binding Pid, Mode=OneWay}" />
                 <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=OneWay}" />
                 <DataGridTextColumn Header="Type" Binding="{Binding ArchitectureText, Mode=OneWay}" />
+                <DataGridTextColumn Header="Arch." Binding="{Binding BitnessText, Mode=OneWay}" />
             </DataGrid.Columns>
         </DataGrid>
 
