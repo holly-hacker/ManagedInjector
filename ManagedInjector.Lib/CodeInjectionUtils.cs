@@ -114,8 +114,7 @@ namespace HoLLy.ManagedInjector
 					}
 				}
 
-				// cannot do call directly, it seems
-				c.AddInstruction(Instruction.Create(Code.Call_rm32, regFun));
+				c.call(new AssemblerRegister32(regFun));
 
 				if (cleanStack && arguments.Length > 0)
 					c.add(esp, arguments.Length * IntPtr.Size);
@@ -158,7 +157,7 @@ namespace HoLLy.ManagedInjector
 				c.pop(tempReg);
 
 				// call the function
-				c.AddInstruction(Instruction.Create(Code.Call_rm64, regFun));
+				c.call(new AssemblerRegister64(regFun));
 			}
 		}
 

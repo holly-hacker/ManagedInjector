@@ -34,7 +34,7 @@ namespace ManagedInjector.CLI
 				throw new Exception("Expected OK status for process");
 		}
 
-		public static string CopyToTempPath(string path)
+		private static string CopyToTempPath(string path)
 		{
 			string dir = Path.GetTempPath();
 
