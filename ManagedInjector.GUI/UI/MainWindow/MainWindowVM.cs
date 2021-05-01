@@ -11,6 +11,7 @@ using HoLLy.ManagedInjector;
 using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
 using ManagedInjector.GUI.Models;
+using ManagedInjector.GUI.UI.About;
 using ManagedInjector.GUI.UI.EntryPointSelect;
 using Microsoft.Win32;
 using Microsoft.Xaml.Behaviors.Core;
@@ -29,6 +30,7 @@ namespace ManagedInjector.GUI.UI.MainWindow
 			_window = window;
 			SelectAssemblyCommand = new ActionCommand(SelectAssembly);
 			InjectCommand = new ActionCommand(Inject);
+			AboutCommand = new ActionCommand(About);
 
 			// TODO: should be done in the background. currently blocks UI thread during startup and could throw
 			RefreshProcesses();
@@ -55,6 +57,7 @@ namespace ManagedInjector.GUI.UI.MainWindow
 
 		public ICommand SelectAssemblyCommand { get; }
 		public ICommand InjectCommand { get; }
+		public ICommand AboutCommand { get; }
 
 		public IReadOnlyList<UserProcess> Processes
 		{
@@ -153,6 +156,11 @@ namespace ManagedInjector.GUI.UI.MainWindow
 			{
 				await _window.ShowMessageAsync("An exception occured", e.ToString());
 			}
+		}
+
+		public static void About()
+		{
+			new AboutDialog().ShowDialog();
 		}
 
 		private static ImmutableList<UserProcess> GetProcesses()

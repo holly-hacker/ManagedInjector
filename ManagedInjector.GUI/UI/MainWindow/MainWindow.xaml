@@ -63,12 +63,11 @@
                     </StackPanel>
                 </GroupBox>
                 <!-- TODO: button to refresh processes -->
-                <Button IsEnabled="{Binding InjectButtonEnabled, Mode=OneWay}"  Command="{Binding InjectCommand, Mode=OneTime}">Inject</Button>
+                <Button IsEnabled="{Binding InjectButtonEnabled, Mode=OneWay}" Command="{Binding InjectCommand, Mode=OneTime}">Inject</Button>
             </StackPanel>
 
             <Grid DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
-                <Label>Hello uwu</Label>
-                <!-- TODO:About button -->
+                <Button Command="{Binding AboutCommand, Mode=OneTime}">About</Button>
             </Grid>
         </DockPanel>
     </Grid>
