@@ -25,6 +25,12 @@ namespace ManagedInjector.CLI
 			Console.WriteLine("Status: " + process.GetStatus());
 			Console.WriteLine("Arch: " + process.GetArchitecture());
 
+			if (process.GetStatus() != ProcessStatus.Ok)
+			{
+				Console.WriteLine("Cannot inject into target process: " + process.GetStatus());
+				return;
+			}
+
 			var dllPath = CopyToTempPath(cli.DllPath);
 			Console.WriteLine("Copied DLL to " + dllPath);
 
