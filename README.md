@@ -7,7 +7,7 @@ gives you access to all it's internal state using the .NET reflection API.
 ## Getting started
 
 Currently, only .NET Framework targets are supported. Mono will be supported in
-the near future and .NET Core/.NET soon after that.
+the near future and .NET Core/.NET will come soon after that.
 
 For .NET Framework targets, the method to be run after injecting must be of
 signature `static int MyMethod(string)`.
@@ -68,6 +68,8 @@ target process until it closes. If you are actively developing your injectable,
 it is recommended to move it to a temporary location first.
 
 ```c#
+using HoLLy.ManagedInjector;
+
 uint pid = 0x1234;
 var process = new InjectableProcess(pid);
 
