@@ -17,7 +17,7 @@ The GUI allows you to select a process and DLL in a graphical interface.
 
 ![Main Window](https://i.imgur.com/wIHXa3R.png)
 
-![Entrypoint Selection](https://i.imgur.com/WPD1Lc0.png)
+![Entrypoint Selection](https://i.imgur.com/vRPZVkm.png)
 
 ### CLI
 

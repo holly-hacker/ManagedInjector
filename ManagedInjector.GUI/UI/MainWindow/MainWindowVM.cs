@@ -53,7 +53,7 @@ namespace ManagedInjector.GUI.UI.MainWindow
 		public string SelectedMethod => _selectedAssembly?.Method ?? "<none>";
 
 		public bool SelectAssemblyButtonEnabled => SelectedProcess is not null;
-		public bool InjectButtonEnabled => SelectedPath is not null && SelectedType is not null && SelectedMethod is not null;
+		public bool InjectButtonEnabled => SelectedAssembly is not null;
 
 		public ICommand SelectAssemblyCommand { get; }
 		public ICommand InjectCommand { get; }

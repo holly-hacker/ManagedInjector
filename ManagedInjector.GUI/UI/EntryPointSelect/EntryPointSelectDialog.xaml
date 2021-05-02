@@ -6,7 +6,7 @@
                       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                       xmlns:entryPointSelect="clr-namespace:ManagedInjector.GUI.UI.EntryPointSelect"
                       mc:Ignorable="d"
-                      Title="EntryPointSelectDialog" Height="360" Width="600">
+                      Title="Select entrypoint" Height="360" Width="600">
     <Grid d:DataContext="{d:DesignInstance entryPointSelect:EntryPointSelectionDialogVM }">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
