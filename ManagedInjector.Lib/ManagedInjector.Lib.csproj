@@ -1,14 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>9</LangVersion>
         <Nullable>enable</Nullable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 
         <RootNamespace>HoLLy.ManagedInjector</RootNamespace>
+        
+        <PackageVersion>1.0.0</PackageVersion>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <FileVersion>1.0.0.0</FileVersion>
 
         <PackageId>HoLLy.ManagedInjector</PackageId>
+        <Title>ManagedInjector.Lib</Title>
         <Authors>HoLLy</Authors>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <Description>A DLL injector to inject .NET assemblies into .NET processes.</Description>
+        <PackageProjectUrl>https://github.com/HoLLy-HaCKeR/ManagedInjector</PackageProjectUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/HoLLy-HaCKeR/ManagedInjector.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
     </PropertyGroup>
 
     <ItemGroup>

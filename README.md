@@ -1,4 +1,5 @@
 # ManagedInjector 💉
+[![NuGet version (HoLLy.ManagedInjector)](https://img.shields.io/nuget/v/HoLLy.ManagedInjector.svg?style=flat-square)](https://www.nuget.org/packages/HoLLy.ManagedInjector/)
 
 With ManagedInjector, you can inject .NET assemblies into other .NET processes.
 This allows you to run your own code under the context of that process, and
@@ -58,9 +59,6 @@ Thread handle: 00000354
 
 With ManagedInjector.Lib, you can integrate ManagedInjector into your own
 applications with an easy-to-use API.
-
-A NuGet package will be uploaded soon. Subscribe to [this issue](https://github.com/HoLLy-HaCKeR/ManagedInjector/issues/2)
-to stay updated.
 
 ⚠ Note that ManagedInjector.Lib will not move your DLLs to a temporary location.
 Due to how managed injection works, the files will remain "in use" by the
