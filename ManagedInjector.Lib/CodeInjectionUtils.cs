@@ -20,7 +20,7 @@ namespace HoLLy.ManagedInjector
 			return dic[name];
 		}
 
-		private static Dictionary<string, int> GetAllExportAddresses(IntPtr hProc, IntPtr hMod, bool x86)
+		public static Dictionary<string, int> GetAllExportAddresses(IntPtr hProc, IntPtr hMod, bool x86)
 		{
 			var dic = new Dictionary<string, int>();
 			int hdr = ReadInt(0x3C);
@@ -169,8 +169,8 @@ namespace HoLLy.ManagedInjector
 				throw new Exception("Error during Iced encode: " + errMsg);
 			byte[] bytes = cw.ToArray();
 
-			var ptrStub = Native.VirtualAllocEx(hProc, IntPtr.Zero, (uint)bytes.Length, 0x1000, 0x40);
-			Native.WriteProcessMemory(hProc, ptrStub, bytes, (uint)bytes.Length, out _);
+			var ptrStub = NativeHelper.VirtualAllocEx(hProc, (uint)bytes.Length);
+			NativeHelper.WriteProcessMemory(hProc, ptrStub, bytes);
 			Console.WriteLine("Written to 0x" + ptrStub.ToInt64().ToString("X8"));
 
 #if DEBUG
@@ -179,6 +179,9 @@ namespace HoLLy.ManagedInjector
 #endif
 
 			var thread = Native.CreateRemoteThread(hProc, IntPtr.Zero, 0u, ptrStub, IntPtr.Zero, 0u, IntPtr.Zero);
+
+			if (thread == IntPtr.Zero)
+				throw new System.ComponentModel.Win32Exception(Native.GetLastError());
 
 			// NOTE: could wait for thread to finish with WaitForSingleObject
 			Debug.Assert(thread != IntPtr.Zero);

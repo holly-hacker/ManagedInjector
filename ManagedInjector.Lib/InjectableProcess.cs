@@ -120,8 +120,7 @@ namespace HoLLy.ManagedInjector
 				if (HasModule("coreclr.dll"))
 					return _architecture = ProcessArchitecture.NetCore;
 
-				// TODO: also check non-bleeding mono dll
-				if (HasModule("mono-2.0-bdwgc.dll"))
+				if (MonoInjector.PossibleDllNames.Any(HasModule))
 					return _architecture = ProcessArchitecture.Mono;
 
 				return ProcessArchitecture.Unknown;
@@ -139,7 +138,7 @@ namespace HoLLy.ManagedInjector
 			{
 				ProcessArchitecture.NetFrameworkV2 => new FrameworkV2Injector(),
 				ProcessArchitecture.NetFrameworkV4 => new FrameworkV4Injector(),
-				ProcessArchitecture.Mono => throw new NotImplementedException("Mono injector is not yet implemented"),
+				ProcessArchitecture.Mono => new MonoInjector(),
 				ProcessArchitecture.NetCore => throw new NotImplementedException(
 					".NET Core injector is not yet implemented"),
 				ProcessArchitecture.Unknown => throw new Exception(

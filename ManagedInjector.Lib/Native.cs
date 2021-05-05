@@ -49,6 +49,9 @@ namespace HoLLy.ManagedInjector
 		public static extern IntPtr CreateRemoteThread(IntPtr hProcess, IntPtr lpThreadAttributes, nuint dwStackSize,
 			IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);
 
+		[DllImport("kernel32.dll", SetLastError=true)]
+		public static extern uint WaitForSingleObject(IntPtr hHandle, uint dwMilliseconds);
+
 		[Flags]
 		public enum ProcessAccessFlags : uint
 		{

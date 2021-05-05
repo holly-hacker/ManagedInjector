@@ -52,6 +52,29 @@ namespace HoLLy.ManagedInjector
 			return buffer;
 		}
 
+		public static void WriteProcessMemory(IntPtr handle, IntPtr address, byte[] data)
+		{
+			var success = Native.WriteProcessMemory(handle, address, data, (uint)data.Length, out var written);
+
+			if (!success)
+				throw new Win32Exception(Native.GetLastError());
+
+			if ((long)written != data.Length)
+				throw new Exception("couldn't write entire data block");
+		}
+
+		public static IntPtr VirtualAllocEx(IntPtr handle, uint len)
+		{
+			const int allocationTypeCommit = 0x1000;
+			const int protectTypeRwx = 0x40;
+			var ret = Native.VirtualAllocEx(handle, IntPtr.Zero, len, allocationTypeCommit, protectTypeRwx);
+
+			if (ret == IntPtr.Zero)
+				throw new Win32Exception(Native.GetLastError());
+
+			return ret;
+		}
+
 		public static IReadOnlyList<(IntPtr baseAddress, string moduleName)> GetModules(uint pid)
 		{
 			var hSnapshot = Native.CreateToolhelp32Snapshot(Native.SnapshotFlags.Module | Native.SnapshotFlags.Module32, pid);
