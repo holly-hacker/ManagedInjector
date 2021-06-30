@@ -3,7 +3,7 @@
 
 With ManagedInjector, you can inject .NET assemblies into other .NET processes.
 This allows you to run your own code under the context of that process, and
-gives you access to all it's internal state using the .NET reflection API.
+gives you access to all its internal state using the .NET reflection API.
 
 ## Getting started
 
