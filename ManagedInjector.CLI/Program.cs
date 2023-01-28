@@ -34,7 +34,7 @@ namespace ManagedInjector.CLI
 			var dllPath = CopyToTempPath(cli.DllPath);
 			Console.WriteLine("Copied DLL to " + dllPath);
 
-			process.Inject(dllPath, cli.EntryType, cli.EntryMethod);
+			process.Inject(cli.DllPath, cli.EntryType, cli.EntryMethod);
 
 			if (process.GetStatus() != ProcessStatus.Ok)
 				throw new Exception("Expected OK status for process");
