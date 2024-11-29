@@ -63,6 +63,7 @@
                 </GroupBox>
                 <!-- TODO: button to refresh processes -->
                 <Button IsEnabled="{Binding InjectButtonEnabled, Mode=OneWay}" Command="{Binding InjectCommand, Mode=OneTime}">Inject</Button>
+                <Button IsEnabled="true" Command="{Binding RefreshProcCommand, Mode=OneWay}">Refresh Processlist</Button>
             </StackPanel>
 
             <Grid DockPanel.Dock="Bottom" VerticalAlignment="Bottom">

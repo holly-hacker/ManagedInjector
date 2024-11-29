@@ -30,6 +30,7 @@ namespace ManagedInjector.GUI.UI.MainWindow
 			_window = window;
 			SelectAssemblyCommand = new ActionCommand(SelectAssembly);
 			InjectCommand = new ActionCommand(Inject);
+			RefreshProcCommand = new ActionCommand(RefreshProcesses);
 			AboutCommand = new ActionCommand(About);
 
 			// TODO: should be done in the background. currently blocks UI thread during startup and could throw
@@ -58,6 +59,7 @@ namespace ManagedInjector.GUI.UI.MainWindow
 		public ICommand SelectAssemblyCommand { get; }
 		public ICommand InjectCommand { get; }
 		public ICommand AboutCommand { get; }
+		public ICommand RefreshProcCommand { get; }
 
 		public IReadOnlyList<UserProcess> Processes
 		{
